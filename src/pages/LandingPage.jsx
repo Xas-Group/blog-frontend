@@ -8,13 +8,15 @@ import StyledButton from "../Components/Button";
 import { useNavigate } from "react-router-dom";
 
 function LandingPage() {
+  const navigate = useNavigate();
 
-    const navigate = useNavigate();
+  const handleStartLearning = () => {
+    navigate("/learn"); // Redirect to the '/learn' page
+  };
 
-     const handleStartLearning = () => {
-       navigate("/learn"); // Redirect to the '/learn' page
-     };
-
+  const handleLoginRedirect = () => {
+    navigate("/login"); // Redirect to the '/login' page
+  };
 
   return (
     <PageBackground
@@ -23,17 +25,26 @@ function LandingPage() {
     >
       <Container>
         {/* Hero Section */}
-        <Row className="justify-content-center text-center">
+        <Row className="justify-content-center text-center mb-5">
           <Col md={8}>
-            <H1>Welcome to Your IT & Business Learning Hub</H1>
-            <P>
+            <H1 className="mb-4">Welcome to Your IT & Business Learning Hub</H1>
+            <P className="mb-4">
               Explore articles, guides, and tutorials from basics to advanced
               topics in IT and Business. Kickstart your journey towards
               knowledge and success.
             </P>
-            <StyledButton onClick={handleStartLearning}>
-              Start Learning Now
-            </StyledButton>
+            <div className="d-flex justify-content-center gap-3">
+              <StyledButton onClick={handleStartLearning} className="px-4">
+                Start Learning Now
+              </StyledButton>
+              <StyledButton
+                variant="outline-dark"
+                onClick={handleLoginRedirect}
+                className="px-4"
+              >
+                Login
+              </StyledButton>
+            </div>
           </Col>
         </Row>
 

@@ -9,7 +9,7 @@ const baseURLs = {
 
 // Set the environment; you can switch between 'local' and 'web'
 // const environment = process.env.NODE_ENV === "production" ? "web" : "local";
-const environment = process.env.NODE_ENV === "production" ? "web" : "web";
+const environment = process.env.NODE_ENV === "production" ? "web" : "local";
 
 const axiosInstance = axios.create({
   baseURL: baseURLs[environment], // Dynamically set the base URL based on the environment
