@@ -1,6 +1,8 @@
+// src/App.js
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
+import "react-toastify/dist/ReactToastify.css";
 
 import Unauthorized from "./pages/Unauthorized"; // A page for unauthorized access
 import RedirectHandler from "./services/RedirectHandler";
@@ -8,6 +10,7 @@ import LandingPage from "./pages/LandingPage";
 import LearnPage from "./pages/LearnPage";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
+import { ToastContainer } from "react-toastify";
 
 function App() {
   return (
@@ -23,6 +26,7 @@ function App() {
         {/* Unauthorized access route */}
         <Route path="/unauthorized" element={<Unauthorized />} />
       </Routes>
+      <ToastContainer position="top-right" autoClose={5000} hideProgressBar />
     </Router>
   );
 }

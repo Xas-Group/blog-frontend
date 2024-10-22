@@ -9,6 +9,7 @@ import {
   ListGroup,
   Image,
   Breadcrumb,
+  Alert,
 } from "react-bootstrap";
 import { H1, H4 } from "../Components/Typography";
 import { FaPlus, FaSearch, FaExternalLinkAlt } from "react-icons/fa";
@@ -17,10 +18,13 @@ import MainTitleModal from "../PageComponents/MainTitleModal";
 import SubSubjectTitleModal from "../PageComponents/SubSubjectTitleModal";
 import axiosInstance from "../utils/axiosInstance";
 import { getUrl } from "../services/UrlServices";
+import { ToastContainer } from "react-toastify";
 
 function DashboardPage() {
   // State for search term
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchMainTitleTerm, setSearchMainTitleTerm] = useState("");
+  const [searchSubTitleTerm, setSearchSubTitleTerm] = useState("");
 
   // State for currently selected items
   const [selectedSubject, setSelectedSubject] = useState(null);
@@ -33,7 +37,13 @@ function DashboardPage() {
   const [showSubTitleModal, setShowSubTitleModal] = useState(false);
 
   // Form data for each modal
-  const [subjectFormData, setSubjectFormData] = useState({});
+  const [subjectFormData, setSubjectFormData] = useState({
+    id: null,
+    subjectName: "",
+    subjectDescription: "",
+    subjectImage: "",
+  });
+
   const [mainTitleFormData, setMainTitleFormData] = useState({});
   const [subTitleFormData, setSubTitleFormData] = useState({});
 
@@ -45,13 +55,22 @@ function DashboardPage() {
   const [mainTitles, setMainTitles] = useState([]);
   const [subTitles, setSubTitles] = useState([]);
 
+  // Error handling state
+  const [error, setError] = useState(null);
+
+  // Fetch subjects
   const fetchSubjects = async () => {
     try {
       const response = await axiosInstance.get("/subjects");
       setSubjects(response.data);
-      console.log("Subjects fetched successfully.");
+      setMainTitles([]);
+      setSubTitles([]);
+      setSelectedSubject(null);
+      setSelectedMainTitle(null);
+      setSelectedSubTitle(null);
+      setError(null); // Clear any previous errors
     } catch (error) {
-      console.error("Error fetching subjects:", error);
+      handleApiError(error, "Error fetching subjects.");
     }
   };
 
@@ -62,9 +81,12 @@ function DashboardPage() {
         `/main-subject-titles/subject/${subjectId}`
       );
       setMainTitles(response.data);
-      console.log("Main Titles fetched successfully.");
+      setSubTitles([]);
+      setSelectedMainTitle(null);
+      setSelectedSubTitle(null);
+      setError(null); // Clear any previous errors
     } catch (error) {
-      console.error("Error fetching main titles:", error);
+      handleApiError(error, "Error fetching main titles.");
     }
   };
 
@@ -75,10 +97,26 @@ function DashboardPage() {
         `/sub-subject-titles/main-title/${mainSubjectId}`
       );
       setSubTitles(response.data);
-      console.log("Sub Titles fetched successfully.");
+      setSelectedSubTitle(null);
+      setError(null); // Clear any previous errors
     } catch (error) {
-      console.error("Error fetching sub titles:", error);
+      if (error.response && error.response.status === 404) {
+        setSubTitles([]);
+        setError("No sub-titles found for the given main subject.");
+      } else {
+        handleApiError(error, "Error fetching sub-titles.");
+      }
     }
+  };
+
+  // Error handler
+  const handleApiError = (error, message) => {
+    console.error(message, error);
+    const errorMessage =
+      error.response?.data?.message ||
+      error.message ||
+      "An unexpected error occurred.";
+    setError(errorMessage);
   };
 
   useEffect(() => {
@@ -87,54 +125,53 @@ function DashboardPage() {
 
   useEffect(() => {
     if (selectedSubject) {
-      fetchMainTitles(selectedSubject.subjectId); // Fetch main titles based on the selected subject
+      fetchMainTitles(selectedSubject.subjectId);
     } else {
-      setMainTitles([]); // Reset if no subject is selected
-      setSelectedMainTitle(null); // Reset selected main title
-      setSelectedSubTitle(null); // Reset selected sub title
+      setMainTitles([]);
+      setSelectedMainTitle(null);
+      setSelectedSubTitle(null);
     }
   }, [selectedSubject]);
 
   useEffect(() => {
     if (selectedMainTitle) {
-      fetchSubTitles(selectedMainTitle.main_subject_id); // Fetch sub titles based on the selected main title
+      fetchSubTitles(selectedMainTitle.main_subject_id);
     } else {
-      setSubTitles([]); // Reset if no main title is selected
-      setSelectedSubTitle(null); // Reset selected sub title
+      setSubTitles([]);
+      setSelectedSubTitle(null);
     }
   }, [selectedMainTitle]);
 
   // Search handler
   const handleSearchChange = (e) => setSearchTerm(e.target.value);
+  const handleMainTitleSearchChange = (e) => setSearchMainTitleTerm(e.target.value);
+  const handleSubTitleSearchChange = (e) => setSearchSubTitleTerm(e.target.value);
 
   // Filtered lists based on search term
   const filteredSubjects = subjects.filter((subject) =>
     subject?.subjectName?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredMainTitles = mainTitles.filter(
-    (mainTitle) =>
-      mainTitle.subjectId === (selectedSubject ? selectedSubject.id : null) &&
-      mainTitle.main_subject_title
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
+  const filteredMainTitles = mainTitles.filter((mainTitle) =>
+    mainTitle.main_subject_title
+      .toLowerCase()
+      .includes(searchMainTitleTerm.toLowerCase())
   );
 
-  const filteredSubTitles = subTitles.filter(
-    (subTitle) =>
-      subTitle.mainSubjectId ===
-        (selectedMainTitle ? selectedMainTitle.id : null) &&
-      subTitle.sub_subject_title
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
+  const filteredSubTitles = subTitles.filter((subTitle) =>
+    subTitle.sub_subject_title.toLowerCase().includes(searchSubTitleTerm.toLowerCase())
   );
 
   // Modal handlers for Subject
-  const handleShowSubjectModal = (data = null) => {
-    setIsUpdating(!!data);
-    setSubjectFormData(data || {});
-    setShowSubjectModal(true);
-  };
+ const handleShowSubjectModal = (data = {}) => {
+   setIsUpdating(!!data.id);
+   console.log(data ? true : false);
+   
+  setIsUpdating( data ? true : false);
+   setSubjectFormData(data);
+   setShowSubjectModal(true);
+ };
+
 
   const handleCloseSubjectModal = () => {
     setShowSubjectModal(false);
@@ -239,6 +276,9 @@ function DashboardPage() {
     <Container className="pt-5">
       <H1>Dashboard</H1>
 
+      {/* Display error message */}
+      {error && <Alert variant="danger">{error}</Alert>}
+
       {/* Breadcrumb for showing current selection */}
       <Breadcrumb className="mb-4">
         <Breadcrumb.Item
@@ -309,7 +349,11 @@ function DashboardPage() {
                 }`}
               >
                 <Image
-                  src={getUrl(subject.subjectImage)}
+                  src={
+                    subject.subjectImage
+                      ? getUrl(subject.subjectImage)
+                      : "https://placehold.co/50x50"
+                  }
                   rounded
                   className="me-3"
                   style={{ width: "50px", height: "50px", objectFit: "cover" }}
@@ -337,8 +381,8 @@ function DashboardPage() {
             <Form.Control
               type="text"
               placeholder="Search Main Title"
-              value={searchTerm}
-              onChange={handleSearchChange}
+              value={searchMainTitleTerm}
+              onChange={handleMainTitleSearchChange}
             />
             <InputGroup.Text>
               <FaSearch />
@@ -347,7 +391,7 @@ function DashboardPage() {
           <ListGroup>
             {filteredMainTitles.map((mainTitle) => (
               <ListGroup.Item
-                key={mainTitle.id}
+                key={mainTitle.main_subject_id}
                 onClick={() => handleMainTitleSelection(mainTitle)}
                 onDoubleClick={() => handleShowMainTitleModal(mainTitle)}
                 className={`d-flex align-items-start ${
@@ -380,8 +424,8 @@ function DashboardPage() {
             <Form.Control
               type="text"
               placeholder="Search Sub Title"
-              value={searchTerm}
-              onChange={handleSearchChange}
+              value={searchSubTitleTerm}
+              onChange={handleSubTitleSearchChange}
             />
             <InputGroup.Text>
               <FaSearch />
@@ -390,7 +434,7 @@ function DashboardPage() {
           <ListGroup>
             {filteredSubTitles.map((subTitle) => (
               <ListGroup.Item
-                key={subTitle.id}
+                key={subTitle.sub_subject_id}
                 onClick={() => setSelectedSubTitle(subTitle)}
                 onDoubleClick={() => handleShowSubTitleModal(subTitle)}
                 className={`d-flex align-items-start justify-content-between ${
@@ -403,7 +447,6 @@ function DashboardPage() {
                 <div>
                   <strong>{subTitle.sub_subject_title}</strong>
                 </div>
-                {/* Open sub-title in a new tab */}
                 <Button
                   variant="link"
                   onClick={(e) => {
@@ -431,6 +474,8 @@ function DashboardPage() {
         initialFormData={subjectFormData}
         handleCloseSubjectModal={handleCloseSubjectModal}
         handleFormSubmit={handleSubjectFormSubmit}
+        refreshSubjectsList={fetchSubjects}
+        selectedSubjectId={selectedSubject?.subjectId}
       />
       <MainTitleModal
         isUpdating={isUpdating}
@@ -439,6 +484,8 @@ function DashboardPage() {
         handleCloseMainTitleModal={handleCloseMainTitleModal}
         handleFormSubmit={handleMainTitleFormSubmit}
         selectedSubjectId={selectedSubject?.subjectId}
+        selectedMainTitleId={selectedMainTitle?.main_subject_id}
+        refreshMainTitlesList={() => fetchMainTitles(selectedSubject.subjectId)}
       />
       <SubSubjectTitleModal
         isUpdating={isUpdating}
@@ -447,7 +494,12 @@ function DashboardPage() {
         handleCloseSubSubjectModal={handleCloseSubTitleModal}
         handleFormSubmit={handleSubTitleFormSubmit}
         selectedMainTitleId={selectedMainTitle?.main_subject_id}
+        selectedSubTitleId={selectedSubTitle?.sub_subject_id}
+        refreshSubSubjectsList={() =>
+          fetchSubTitles(selectedMainTitle.main_subject_id)
+        }
       />
+      
     </Container>
   );
 }

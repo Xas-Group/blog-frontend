@@ -1,57 +1,89 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axiosInstance from "../utils/axiosInstance";
 
 const MainTitleModal = ({
-  showMainTitleModal,
-  handleCloseMainTitleModal,
-  isUpdating,
-  initialFormData,
-  refreshMainTitlesList, // Callback to refresh the main titles list after insert/update/delete
-  selectedSubjectId,
+  showMainTitleModal = false,
+  handleCloseMainTitleModal = () => {},
+  isUpdating = false,
+  initialFormData = {},
+  refreshMainTitlesList = () => {},
+  selectedSubjectId = null,
+  selectedMainTitleId = null,
 }) => {
   const [mainTitleFormData, setMainTitleFormData] = useState({
-    main_subject_title: "",
-    main_subject_short_title: "",
-    main_subject_title_order: "",
-    subjectId: selectedSubjectId || "",
+    main_subject_title: initialFormData.main_subject_title || "",
+    main_subject_short_title: initialFormData.main_subject_short_title || "",
+    main_subject_title_order: initialFormData.main_subject_title_order || "",
+    subjectId: selectedSubjectId || initialFormData.subjectId || "",
   });
+
   const [loading, setLoading] = useState(false);
 
   // Update form data if initialFormData changes (e.g., in edit mode)
   useEffect(() => {
-    if (initialFormData) {
-      setMainTitleFormData(initialFormData);
+    if (initialFormData && isUpdating) {
+      setMainTitleFormData({
+        main_subject_title: initialFormData.main_subject_title || "",
+        main_subject_short_title:
+          initialFormData.main_subject_short_title || "",
+        main_subject_title_order:
+          initialFormData.main_subject_title_order || "",
+        subjectId: selectedSubjectId || initialFormData.subjectId || "",
+      });
+    } else {
+      setMainTitleFormData((prevData) => ({
+        ...prevData,
+        subjectId: selectedSubjectId || "",
+      }));
     }
-  }, [initialFormData]);
+  }, [initialFormData, selectedSubjectId, isUpdating]);
 
   // Handle form input changes
   const handleMainTitleFormChange = (e) => {
     const { name, value } = e.target;
     setMainTitleFormData((prevData) => ({
       ...prevData,
-      [name]: value,
+      [name]: name === "main_subject_title_order" ? parseInt(value, 10) : value,
     }));
   };
 
-  // Handle form submission for Insert or Update
+  // Validate form data
+  const isFormValid = () => {
+    const {
+      main_subject_title,
+      main_subject_short_title,
+      main_subject_title_order,
+      subjectId,
+    } = mainTitleFormData;
+
+    return (
+      main_subject_title.trim() !== "" &&
+      main_subject_short_title.trim() !== "" &&
+      !isNaN(main_subject_title_order) &&
+      main_subject_title_order > 0 &&
+      subjectId !== ""
+    );
+  };
+
+  // Handle form submission for insert or update
   const handleMainTitleFormSubmit = async () => {
+    if (!isFormValid()) {
+      toast.error("Please fill out all fields correctly.");
+      return;
+    }
+
     setLoading(true);
 
-    const payload = {
-      main_subject_title: mainTitleFormData.main_subject_title,
-      main_subject_short_title: mainTitleFormData.main_subject_short_title,
-      main_subject_title_order: mainTitleFormData.main_subject_title_order,
-      subjectId: selectedSubjectId,
-    };
+    const payload = { ...mainTitleFormData };
 
     try {
-      if (isUpdating) {
+      if (isUpdating && selectedMainTitleId) {
         // Update API call
         await axiosInstance.put(
-          `/main-subject-title/${initialFormData.main_subject_id}`,
+          `/main-subject-title/${selectedMainTitleId}`,
           payload
         );
         toast.success("Main subject title updated successfully");
@@ -60,11 +92,16 @@ const MainTitleModal = ({
         await axiosInstance.post("/main-subject-title", payload);
         toast.success("Main subject title added successfully");
       }
-      refreshMainTitlesList(); // Refresh the main titles list
-      handleCloseMainTitleModal(); // Close modal
+
+      // Refresh main titles list and close modal
+      refreshMainTitlesList();
+      handleCloseMainTitleModal();
     } catch (error) {
       console.error("Error saving main subject title:", error);
-      toast.error("Failed to save main subject title. Please try again.");
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save main subject title. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -72,18 +109,34 @@ const MainTitleModal = ({
 
   // Handle deleting the main subject title
   const handleDeleteMainTitle = async () => {
+    if (!selectedMainTitleId) {
+      toast.error("No main subject title selected for deletion.");
+      return;
+    }
+
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this main subject title?"
+      )
+    ) {
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await axiosInstance.delete(
-        `/main-subject-title/${initialFormData.main_subject_id}`
-      );
+      await axiosInstance.delete(`/main-subject-title/${selectedMainTitleId}`);
       toast.success("Main subject title deleted successfully");
-      refreshMainTitlesList(); // Refresh the main titles list
-      handleCloseMainTitleModal(); // Close modal
+
+      // Refresh main titles list and close modal
+      refreshMainTitlesList();
+      handleCloseMainTitleModal();
     } catch (error) {
       console.error("Error deleting main subject title:", error);
-      toast.error("Failed to delete main subject title. Please try again.");
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to delete main subject title. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -91,7 +144,6 @@ const MainTitleModal = ({
 
   return (
     <>
-      <ToastContainer />
       <Modal show={showMainTitleModal} onHide={handleCloseMainTitleModal}>
         <Modal.Header closeButton>
           <Modal.Title>
@@ -109,6 +161,7 @@ const MainTitleModal = ({
                 value={mainTitleFormData.main_subject_title}
                 onChange={handleMainTitleFormChange}
                 required
+                disabled={loading}
               />
             </Form.Group>
 
@@ -121,6 +174,7 @@ const MainTitleModal = ({
                 value={mainTitleFormData.main_subject_short_title}
                 onChange={handleMainTitleFormChange}
                 required
+                disabled={loading}
               />
             </Form.Group>
 
@@ -133,6 +187,7 @@ const MainTitleModal = ({
                 value={mainTitleFormData.main_subject_title_order}
                 onChange={handleMainTitleFormChange}
                 required
+                disabled={loading}
               />
             </Form.Group>
           </Form>

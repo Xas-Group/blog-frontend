@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal, Button, Form, Image, Spinner } from "react-bootstrap";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -8,20 +8,41 @@ const SubjectModal = ({
   showSubjectModal,
   handleCloseSubjectModal,
   isUpdating,
-  initialFormData,
-  refreshSubjectsList, 
+  initialFormData = {}, // Default to empty object
+  selectedSubjectId,
+  refreshSubjectsList,
 }) => {
-  const [subjectFormData, setSubjectFormData] = useState(
-    initialFormData || {
-      title: "",
-      description: "",
-      image: null,
-      imagePreview: null,
-      order: "",
-    }
-  );
-
+  // Initialize form data
+  const [subjectFormData, setSubjectFormData] = useState({
+    title: "",
+    description: "",
+    image: null,
+    imagePreview: null,
+    order: "",
+  });
   const [loading, setLoading] = useState(false);
+
+  // Update form data if initialFormData changes (e.g., in edit mode)
+  useEffect(() => {
+    if (initialFormData && isUpdating) {
+      setSubjectFormData({
+        title: initialFormData.title || "",
+        description: initialFormData.description || "",
+        image: null,
+        imagePreview: initialFormData.image ? initialFormData.image : null,
+        order: initialFormData.order || "",
+      });
+    } else {
+      // Reset form data for adding a new subject
+      setSubjectFormData({
+        title: "",
+        description: "",
+        image: null,
+        imagePreview: null,
+        order: "",
+      });
+    }
+  }, [initialFormData, isUpdating]);
 
   // Handle form input changes
   const handleSubjectFormChange = (e) => {
@@ -35,17 +56,34 @@ const SubjectModal = ({
   // Handle file input change
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    setSubjectFormData((prevData) => ({
-      ...prevData,
-      image: file,
-      imagePreview: file ? URL.createObjectURL(file) : null,
-    }));
+    if (file) {
+      setSubjectFormData((prevData) => ({
+        ...prevData,
+        image: file,
+        imagePreview: URL.createObjectURL(file),
+      }));
+    }
+  };
+
+  // Validate form data
+  const isFormValid = () => {
+    return (
+      subjectFormData.title.trim() !== "" &&
+      subjectFormData.description.trim() !== "" &&
+      subjectFormData.order.trim() !== ""
+    );
   };
 
   // Handle form submission (Insert or Update)
   const handleSubjectFormSubmit = async () => {
+    if (!isFormValid()) {
+      toast.error("Please fill out all fields.");
+      return;
+    }
+
     setLoading(true);
 
+    // Prepare form data
     const formData = new FormData();
     formData.append("subjectName", subjectFormData.title);
     formData.append("subjectDescription", subjectFormData.description);
@@ -55,20 +93,25 @@ const SubjectModal = ({
     }
 
     try {
-      if (isUpdating) {
+      if (isUpdating && selectedSubjectId) {
         // Update API call
-        await axiosInstance.put(`/subject/${initialFormData.id}`, formData);
+        await axiosInstance.put(`/subject/${selectedSubjectId}`, formData);
         toast.success("Subject updated successfully");
       } else {
-        // Add API call
+        // Insert API call
         await axiosInstance.post("/subject", formData);
         toast.success("Subject added successfully");
       }
-      refreshSubjectsList(); // Refresh the subject list after insert/update
-      handleCloseSubjectModal(); // Close modal
+
+      // Refresh the subjects list and close the modal
+      refreshSubjectsList();
+      handleCloseSubjectModal();
     } catch (err) {
       console.error("Error in subject operation:", err);
-      toast.error("Failed to save subject. Please try again.");
+      toast.error(
+        err.response?.data?.message ||
+          "Failed to save subject. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -76,16 +119,26 @@ const SubjectModal = ({
 
   // Handle deleting the subject
   const handleDeleteSubject = async () => {
+    if (!selectedSubjectId) {
+      toast.error("No subject selected for deletion.");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await axiosInstance.delete(`/subject/${initialFormData.id}`);
+      await axiosInstance.delete(`/subject/${selectedSubjectId}`);
       toast.success("Subject deleted successfully");
-      refreshSubjectsList(); // Refresh the subject list after deletion
-      handleCloseSubjectModal(); // Close modal
+
+      // Refresh the subjects list and close the modal
+      refreshSubjectsList();
+      handleCloseSubjectModal();
     } catch (err) {
       console.error("Error deleting subject:", err);
-      toast.error("Failed to delete subject. Please try again.");
+      toast.error(
+        err.response?.data?.message ||
+          "Failed to delete subject. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -93,7 +146,6 @@ const SubjectModal = ({
 
   return (
     <>
-      <ToastContainer />
       <Modal show={showSubjectModal} onHide={handleCloseSubjectModal}>
         <Modal.Header closeButton>
           <Modal.Title>{isUpdating ? "Update" : "Add"} Subject</Modal.Title>
@@ -108,6 +160,8 @@ const SubjectModal = ({
                 name="title"
                 value={subjectFormData.title}
                 onChange={handleSubjectFormChange}
+                required
+                disabled={loading}
               />
             </Form.Group>
 
@@ -119,6 +173,8 @@ const SubjectModal = ({
                 name="description"
                 value={subjectFormData.description}
                 onChange={handleSubjectFormChange}
+                required
+                disabled={loading}
               />
             </Form.Group>
 
@@ -129,6 +185,7 @@ const SubjectModal = ({
                 name="image"
                 onChange={handleImageChange}
                 accept="image/*"
+                disabled={loading}
               />
               {subjectFormData.imagePreview && (
                 <div className="mt-3">
@@ -150,6 +207,8 @@ const SubjectModal = ({
                 name="order"
                 value={subjectFormData.order}
                 onChange={handleSubjectFormChange}
+                required
+                disabled={loading}
               />
             </Form.Group>
           </Form>
