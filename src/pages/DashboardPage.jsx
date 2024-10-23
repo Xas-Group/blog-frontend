@@ -401,6 +401,7 @@ function DashboardPage() {
               >
                 <div>
                   <strong>{mainTitle.main_subject_title}</strong>
+                  <p className="mb-0">{mainTitle.main_subject_short_title}</p>
                 </div>
               </ListGroup.Item>
             ))}
@@ -443,6 +444,7 @@ function DashboardPage() {
               >
                 <div>
                   <strong>{subTitle.sub_subject_title}</strong>
+                  <p className="mb-0">{subTitle.sub_subject_short_title}</p>
                 </div>
                 <Button
                   variant="link"
@@ -496,7 +498,6 @@ function DashboardPage() {
           fetchSubTitles(selectedMainTitle.main_subject_id)
         }
       />
-      
     </Container>
   );
 }
