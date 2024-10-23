@@ -1,0 +1,16 @@
+<script type="text/javascript">
+  // Get the current pathname (e.g., /kaaryaalaya-frontend/dashboard)
+  var pathname = window.location.pathname;
+
+  // Define the basename for your app
+  var basename = "/kaaryaalaya-frontend";
+
+  // Redirect only if the pathname starts with the basename (to handle page refresh)
+  if (pathname.startsWith(basename)) {
+    // Redirect to index.html and preserve the full path after the basename
+    window.location.replace(window.location.origin + basename + "/index.html?path=" + pathname.replace(basename, ""));
+  } else {
+    // If the path doesn't match, redirect to the base URL (optional)
+    window.location.replace(window.location.origin + basename);
+  }
+</script>

@@ -19,6 +19,9 @@ import SubSubjectTitleModal from "../PageComponents/SubSubjectTitleModal";
 import axiosInstance from "../utils/axiosInstance";
 import { getUrl } from "../services/UrlServices";
 import { ToastContainer } from "react-toastify";
+import DashboardHeader from "../PageComponents/DashboardHeader";
+import AuthService from "../services/authService";
+import { useNavigate } from "react-router-dom";
 
 function DashboardPage() {
   // State for search term
@@ -36,6 +39,9 @@ function DashboardPage() {
   const [showMainTitleModal, setShowMainTitleModal] = useState(false);
   const [showSubTitleModal, setShowSubTitleModal] = useState(false);
 
+  const user = AuthService.getUserInfo();
+  const navigate = useNavigate();
+
   // Form data for each modal
   const [subjectFormData, setSubjectFormData] = useState({
     id: null,
@@ -43,6 +49,8 @@ function DashboardPage() {
     subjectDescription: "",
     subjectImage: "",
   });
+
+
 
   const [mainTitleFormData, setMainTitleFormData] = useState({});
   const [subTitleFormData, setSubTitleFormData] = useState({});
@@ -120,6 +128,7 @@ function DashboardPage() {
   };
 
   useEffect(() => {
+    console.log(user);
     fetchSubjects();
   }, []);
 
@@ -141,6 +150,13 @@ function DashboardPage() {
       setSelectedSubTitle(null);
     }
   }, [selectedMainTitle]);
+
+  useEffect(() => {
+    // Redirect to home if user is null
+    if (!user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
 
   // Search handler
   const handleSearchChange = (e) => setSearchTerm(e.target.value);
@@ -271,7 +287,7 @@ function DashboardPage() {
 
   return (
     <Container className="pt-5">
-      <H1>Dashboard</H1>
+      <DashboardHeader userName={user?.name} userImage={user?.profileImage} />
 
       {/* Display error message */}
       {error && <Alert variant="danger">{error}</Alert>}
@@ -451,7 +467,7 @@ function DashboardPage() {
                   onClick={(e) => {
                     e.stopPropagation(); // Prevents triggering the parent click event
                     window.open(
-                      `/sub-title/${subTitle.sub_subject_id}`,
+                      `/blog-frontend/pageComponent/${subTitle.sub_subject_id}`,
                       "_blank"
                     );
                   }}

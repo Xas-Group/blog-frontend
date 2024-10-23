@@ -11,6 +11,8 @@ import LearnPage from "./pages/LearnPage";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import { ToastContainer } from "react-toastify";
+import PageComponent from "./pages/PageComponent";
+import Blog from "./pages/Blog";
 
 function App() {
   return (
@@ -23,6 +25,8 @@ function App() {
         <Route path="/learn" element={<LearnPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/pageComponent/:subTitleId" element={<PageComponent />} />
+        <Route path="/Blog/:subjectId" element={<Blog />} />
         {/* Unauthorized access route */}
         <Route path="/unauthorized" element={<Unauthorized />} />
       </Routes>

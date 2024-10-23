@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Container,
   Row,
@@ -10,9 +10,12 @@ import {
   Alert,
 } from "react-bootstrap";
 import styled from "styled-components";
-import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
+import { useNavigate } from "react-router-dom";
 import { H2, P } from "../Components/Typography";
 import { FaArrowRight, FaSearch, FaArrowLeft } from "react-icons/fa";
+import axios from "axios"; // Import axios for API requests
+import axiosInstance from "../utils/axiosInstance";
+import { getUrl } from "../services/UrlServices";
 
 // Styled Components
 const PageWrapper = styled.div`
@@ -105,41 +108,24 @@ const NoResultsMessage = styled(Alert)`
   font-size: 1.2rem;
 `;
 
-// Dummy Data
-const subjects = [
-  {
-    subjectId: 1,
-    subjectName: "Introduction to Programming",
-    subjectImage: "https://placehold.co/300x200",
-    subjectDescription:
-      "Learn the basics of programming with hands-on exercises and projects. This course will introduce you to fundamental programming concepts and prepare you for advanced topics.",
-  },
-  {
-    subjectId: 2,
-    subjectName: "Web Development",
-    subjectImage: null,
-    subjectDescription:
-      "Build interactive and responsive websites using HTML, CSS, and JavaScript. This course covers front-end frameworks and server-side programming.",
-  },
-  {
-    subjectId: 3,
-    subjectName: "Data Science",
-    subjectImage: "https://placehold.co/300x200",
-    subjectDescription:
-      "Dive into data analysis, visualization, and machine learning with Python. You'll learn how to handle datasets, build models, and create insightful reports.",
-  },
-  {
-    subjectId: 4,
-    subjectName: "Business Management",
-    subjectImage: null,
-    subjectDescription:
-      "Learn effective management strategies to lead successful businesses. This course covers management principles, leadership skills, and organizational behavior.",
-  },
-];
-
 function LearnPage() {
+  const [subjects, setSubjects] = useState([]); // State for subjects
   const [searchTerm, setSearchTerm] = useState("");
-  const navigate = useNavigate(); // Initialize useNavigate for navigation
+  const navigate = useNavigate();
+
+  // Fetch subjects from API
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      try {
+        const response = await axiosInstance.get("/subjects"); // Adjust this URL as per your routing
+        setSubjects(response.data); // Set the fetched subjects
+      } catch (error) {
+        console.error("Error fetching subjects:", error);
+      }
+    };
+
+    fetchSubjects();
+  }, []); // Empty dependency array to run only once
 
   // Filter subjects based on search term
   const filteredSubjects = subjects.filter((subject) =>
@@ -148,18 +134,16 @@ function LearnPage() {
 
   // Handle navigation to subject details page
   const handleStartLearning = (subjectId) => {
-    navigate(`/subjects/${subjectId}`);
+    navigate(`/Blog/${subjectId}`);
   };
 
   return (
     <PageWrapper>
       <Container>
-        {/* Back to Landing Page Button */}
         <BackButton onClick={() => navigate("/")}>
           <FaArrowLeft /> Back to Landing Page
         </BackButton>
 
-        {/* Responsive header with title and search bar */}
         <Row className="align-items-center mb-4">
           <Col xs={12} md={6}>
             <H2>Explore Our Learning Modules</H2>
@@ -186,7 +170,6 @@ function LearnPage() {
           learning journey today!
         </P>
 
-        {/* Display a message if no subjects are found */}
         {filteredSubjects.length === 0 ? (
           <NoResultsMessage variant="warning">
             No subjects found. Try searching with a different term.
@@ -198,7 +181,10 @@ function LearnPage() {
                 <SubjectCard>
                   <Card.Img
                     variant="top"
-                    src={subject.subjectImage || "https://placehold.co/300x200"}
+                    src={
+                      getUrl(subject.subjectImage) ||
+                      "https://placehold.co/300x200"
+                    }
                     alt={subject.subjectName}
                   />
                   <CardBody>

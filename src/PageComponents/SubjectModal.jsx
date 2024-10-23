@@ -3,17 +3,17 @@ import { Modal, Button, Form, Image, Spinner } from "react-bootstrap";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axiosInstance from "../utils/axiosInstance";
-  import Swal from "sweetalert2";
+import Swal from "sweetalert2";
+import { getUrl } from "../services/UrlServices";
 
 const SubjectModal = ({
   showSubjectModal,
   handleCloseSubjectModal,
   isUpdating,
-  initialFormData = {}, // Default to empty object
+  initialFormData = {},
   selectedSubjectId,
   refreshSubjectsList,
 }) => {
-  // Initialize form data
   const [subjectFormData, setSubjectFormData] = useState({
     title: "",
     description: "",
@@ -23,21 +23,19 @@ const SubjectModal = ({
   });
   const [loading, setLoading] = useState(false);
 
-
-  // Update form data if initialFormData changes (e.g., in edit mode)
   useEffect(() => {
+    // Set form data for edit or reset for add
     if (initialFormData && isUpdating) {
       setSubjectFormData({
         title: initialFormData.subjectName || "",
         description: initialFormData.subjectDescription || "",
         image: null,
         imagePreview: initialFormData.subjectImage
-          ? initialFormData.subjectImage
+          ? getUrl(initialFormData.subjectImage)
           : null,
         order: initialFormData.subjectOrder || "",
       });
     } else {
-      // Reset form data for adding a new subject
       setSubjectFormData({
         title: "",
         description: "",
@@ -48,7 +46,30 @@ const SubjectModal = ({
     }
   }, [initialFormData, isUpdating]);
 
-  // Handle form input changes
+  useEffect(() => {
+    const handlePaste = (e) => {
+      const items = e.clipboardData?.items;
+      if (items) {
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          if (item.type.includes("image")) {
+            const file = item.getAsFile();
+            setSubjectFormData((prevData) => ({
+              ...prevData,
+              image: file,
+              imagePreview: URL.createObjectURL(file),
+            }));
+          }
+        }
+      }
+    };
+
+    window.addEventListener("paste", handlePaste);
+    return () => {
+      window.removeEventListener("paste", handlePaste);
+    };
+  }, []);
+
   const handleSubjectFormChange = (e) => {
     const { name, value } = e.target;
     setSubjectFormData((prevData) => ({
@@ -57,7 +78,6 @@ const SubjectModal = ({
     }));
   };
 
-  // Handle file input change
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -69,7 +89,6 @@ const SubjectModal = ({
     }
   };
 
-  // Validate form data
   const isFormValid = () => {
     return (
       subjectFormData.title.trim() !== "" &&
@@ -77,8 +96,6 @@ const SubjectModal = ({
       subjectFormData.order !== ""
     );
   };
-
-  // Handle form submission (Insert or Update)
 
   const handleSubjectFormSubmit = async () => {
     if (!isFormValid()) {
@@ -88,7 +105,6 @@ const SubjectModal = ({
 
     setLoading(true);
 
-    // Prepare form data
     const formData = new FormData();
     formData.append("subjectName", subjectFormData.title);
     formData.append("subjectDescription", subjectFormData.description);
@@ -98,9 +114,7 @@ const SubjectModal = ({
     }
 
     try {
-      // Check if it's an update request
       if (isUpdating && selectedSubjectId) {
-        // Show SweetAlert2 confirmation
         const result = await Swal.fire({
           title: "Are you sure?",
           text: "You are about to update the subject.",
@@ -112,21 +126,15 @@ const SubjectModal = ({
           cancelButtonText: "Cancel",
         });
 
-        // If confirmed, proceed with the update API call
         if (result.isConfirmed) {
           await axiosInstance.put(`/subject/${selectedSubjectId}`, formData);
           toast.success("Subject updated successfully");
-
-          // Refresh the subjects list and close the modal
           refreshSubjectsList();
           handleCloseSubjectModal();
         }
       } else {
-        // Insert API call
         await axiosInstance.post("/subject", formData);
         toast.success("Subject added successfully");
-
-        // Refresh the subjects list and close the modal
         refreshSubjectsList();
         handleCloseSubjectModal();
       }
@@ -141,16 +149,12 @@ const SubjectModal = ({
     }
   };
 
-
-  // Handle deleting the subject
-
   const handleDeleteSubject = async () => {
     if (!selectedSubjectId) {
       toast.error("No subject selected for deletion.");
       return;
     }
 
-    // Show SweetAlert2 confirmation
     const result = await Swal.fire({
       title: "Are you sure?",
       text: "You won't be able to revert this!",
@@ -162,15 +166,12 @@ const SubjectModal = ({
       cancelButtonText: "Cancel",
     });
 
-    // If the user confirms, proceed with deletion
     if (result.isConfirmed) {
       setLoading(true);
 
       try {
         await axiosInstance.delete(`/subject/${selectedSubjectId}`);
         toast.success("Subject deleted successfully");
-
-        // Refresh the subjects list and close the modal
         refreshSubjectsList();
         handleCloseSubjectModal();
       } catch (err) {
@@ -184,7 +185,6 @@ const SubjectModal = ({
       }
     }
   };
-
 
   return (
     <>
@@ -221,7 +221,7 @@ const SubjectModal = ({
             </Form.Group>
 
             <Form.Group className="mb-3" controlId="formSubjectImage">
-              <Form.Label>Subject Image</Form.Label>
+              <Form.Label>Subject Image (Paste or Upload)</Form.Label>
               <Form.Control
                 type="file"
                 name="image"
@@ -239,6 +239,9 @@ const SubjectModal = ({
                   />
                 </div>
               )}
+              <Form.Text className="text-muted">
+                You can also paste an image using <strong>Ctrl + V</strong>.
+              </Form.Text>
             </Form.Group>
 
             <Form.Group className="mb-3" controlId="formSubjectOrder">
@@ -287,6 +290,7 @@ const SubjectModal = ({
           </Button>
         </Modal.Footer>
       </Modal>
+      <ToastContainer />
     </>
   );
 };
