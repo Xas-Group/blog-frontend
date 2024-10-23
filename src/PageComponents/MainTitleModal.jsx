@@ -3,6 +3,7 @@ import { Modal, Button, Form } from "react-bootstrap";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axiosInstance from "../utils/axiosInstance";
+import Swal from "sweetalert2";
 
 const MainTitleModal = ({
   showMainTitleModal = false,
@@ -69,6 +70,7 @@ const MainTitleModal = ({
   };
 
   // Handle form submission for insert or update
+
   const handleMainTitleFormSubmit = async () => {
     if (!isFormValid()) {
       toast.error("Please fill out all fields correctly.");
@@ -80,22 +82,41 @@ const MainTitleModal = ({
     const payload = { ...mainTitleFormData };
 
     try {
+      // Check if it's an update request
       if (isUpdating && selectedMainTitleId) {
-        // Update API call
-        await axiosInstance.put(
-          `/main-subject-title/${selectedMainTitleId}`,
-          payload
-        );
-        toast.success("Main subject title updated successfully");
+        // Show SweetAlert2 confirmation
+        const result = await Swal.fire({
+          title: "Are you sure?",
+          text: "You are about to update the main subject title.",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Yes, update it!",
+          cancelButtonText: "Cancel",
+        });
+
+        // If confirmed, proceed with the update API call
+        if (result.isConfirmed) {
+          await axiosInstance.put(
+            `/main-subject-title/${selectedMainTitleId}`,
+            payload
+          );
+          toast.success("Main subject title updated successfully");
+
+          // Refresh main titles list and close modal
+          refreshMainTitlesList();
+          handleCloseMainTitleModal();
+        }
       } else {
         // Insert API call
         await axiosInstance.post("/main-subject-title", payload);
         toast.success("Main subject title added successfully");
-      }
 
-      // Refresh main titles list and close modal
-      refreshMainTitlesList();
-      handleCloseMainTitleModal();
+        // Refresh main titles list and close modal
+        refreshMainTitlesList();
+        handleCloseMainTitleModal();
+      }
     } catch (error) {
       console.error("Error saving main subject title:", error);
       toast.error(
@@ -107,40 +128,50 @@ const MainTitleModal = ({
     }
   };
 
+
   // Handle deleting the main subject title
+
   const handleDeleteMainTitle = async () => {
     if (!selectedMainTitleId) {
       toast.error("No main subject title selected for deletion.");
       return;
     }
 
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this main subject title?"
-      )
-    ) {
-      return;
-    }
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "Cancel",
+    });
 
-    setLoading(true);
+    if (result.isConfirmed) {
+      setLoading(true);
 
-    try {
-      await axiosInstance.delete(`/main-subject-title/${selectedMainTitleId}`);
-      toast.success("Main subject title deleted successfully");
+      try {
+        await axiosInstance.delete(
+          `/main-subject-title/${selectedMainTitleId}`
+        );
+        toast.success("Main subject title deleted successfully");
 
-      // Refresh main titles list and close modal
-      refreshMainTitlesList();
-      handleCloseMainTitleModal();
-    } catch (error) {
-      console.error("Error deleting main subject title:", error);
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to delete main subject title. Please try again."
-      );
-    } finally {
-      setLoading(false);
+        // Refresh main titles list and close modal
+        refreshMainTitlesList();
+        handleCloseMainTitleModal();
+      } catch (error) {
+        console.error("Error deleting main subject title:", error);
+        toast.error(
+          error.response?.data?.message ||
+            "Failed to delete main subject title. Please try again."
+        );
+      } finally {
+        setLoading(false);
+      }
     }
   };
+
 
   return (
     <>
@@ -203,18 +234,18 @@ const MainTitleModal = ({
             </Button>
           )}
           <Button
-            variant="secondary"
-            onClick={handleCloseMainTitleModal}
-            disabled={loading}
-          >
-            Close
-          </Button>
-          <Button
             variant="primary"
             onClick={handleMainTitleFormSubmit}
             disabled={loading}
           >
             {loading ? "Saving..." : isUpdating ? "Update" : "Save"}
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={handleCloseMainTitleModal}
+            disabled={loading}
+          >
+            Close
           </Button>
         </Modal.Footer>
       </Modal>

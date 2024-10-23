@@ -3,6 +3,7 @@ import { Modal, Button, Form } from "react-bootstrap";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axiosInstance from "../utils/axiosInstance";
+ import Swal from "sweetalert2";
 
 const SubSubjectTitleModal = ({
   showSubSubjectModal,
@@ -56,83 +57,115 @@ const SubSubjectTitleModal = ({
    return (
      sub_subject_title.trim() !== "" &&
      sub_subject_short_title.trim() !== "" &&
-     sub_subject_title_order.trim() !== "" &&
+     sub_subject_title_order !== "" &&
      main_subject_id !== ""
    );
  };
 
 
   // Handle form submission for insert or update
-  const handleFormSubmit = async () => {
-    if (!isFormValid()) {
-      toast.error("Please fill out all fields.");
-      return;
-    }
 
-    setLoading(true);
+ const handleFormSubmit = async () => {
+   if (!isFormValid()) {
+     toast.error("Please fill out all fields.");
+     return;
+   }
 
-    const payload = { ...subSubjectFormData };
+   setLoading(true);
 
-    try {
-      if (isUpdating && selectedSubTitleId) {
-        // Update API call
-        await axiosInstance.put(
-          `/sub-subject-title/${selectedSubTitleId}`,
-          payload
-        );
-        toast.success("Sub-subject title updated successfully");
-      } else {
-        // Insert API call
-        await axiosInstance.post("/sub-subject-title", payload);
-        toast.success("Sub-subject title added successfully");
-      }
+   const payload = { ...subSubjectFormData };
 
-      // Refresh the list and close the modal
-      refreshSubSubjectsList();
-      handleCloseSubSubjectModal();
-    } catch (error) {
-      console.error("Error saving sub-subject title:", error);
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to save sub-subject title. Please try again."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+   try {
+     // Check if it's an update request
+     if (isUpdating && selectedSubTitleId) {
+       // Show SweetAlert2 confirmation
+       const result = await Swal.fire({
+         title: "Are you sure?",
+         text: "You are about to update the sub-subject title.",
+         icon: "warning",
+         showCancelButton: true,
+         confirmButtonColor: "#3085d6",
+         cancelButtonColor: "#d33",
+         confirmButtonText: "Yes, update it!",
+         cancelButtonText: "Cancel",
+       });
+
+       // If confirmed, proceed with the update API call
+       if (result.isConfirmed) {
+         await axiosInstance.put(
+           `/sub-subject-title/${selectedSubTitleId}`,
+           payload
+         );
+         toast.success("Sub-subject title updated successfully");
+
+         // Refresh the list and close the modal
+         refreshSubSubjectsList();
+         handleCloseSubSubjectModal();
+       }
+     } else {
+       // Insert API call
+       await axiosInstance.post("/sub-subject-title", payload);
+       toast.success("Sub-subject title added successfully");
+
+       // Refresh the list and close the modal
+       refreshSubSubjectsList();
+       handleCloseSubSubjectModal();
+     }
+   } catch (error) {
+     console.error("Error saving sub-subject title:", error);
+     toast.error(
+       error.response?.data?.message ||
+         "Failed to save sub-subject title. Please try again."
+     );
+   } finally {
+     setLoading(false);
+   }
+ };
 
 
   // Handle deleting the sub-subject title
+
   const handleDeleteSubSubject = async () => {
     if (!selectedSubTitleId) {
       toast.error("No sub-subject selected for deletion.");
       return;
     }
 
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this sub-subject title?"
-    );
-    if (!confirmDelete) return;
+    // Show SweetAlert2 confirmation
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "Cancel",
+    });
 
-    setLoading(true);
+    // If the user confirms, proceed with deletion
+    if (result.isConfirmed) {
+      setLoading(true);
 
-    try {
-      await axiosInstance.delete(`/sub-subject-title/${selectedSubTitleId}`);
-      toast.success("Sub-subject title deleted successfully");
+      try {
+        await axiosInstance.delete(`/sub-subject-title/${selectedSubTitleId}`);
+        toast.success("Sub-subject title deleted successfully");
 
-      // Refresh the list and close the modal
-      refreshSubSubjectsList();
-      handleCloseSubSubjectModal();
-    } catch (error) {
-      console.error("Error deleting sub-subject title:", error);
-      toast.error(
-        error?.response?.data?.message ||
-          "Failed to delete sub-subject title. Please try again."
-      );
-    } finally {
-      setLoading(false);
+        // Refresh the list and close the modal
+        refreshSubSubjectsList();
+        handleCloseSubSubjectModal();
+      } catch (error) {
+        console.error("Error deleting sub-subject title:", error);
+        toast.error(
+          error?.response?.data?.message ||
+            "Failed to delete sub-subject title. Please try again."
+        );
+      } finally {
+        setLoading(false);
+      }
     }
   };
+
 
 
 
@@ -197,18 +230,18 @@ const SubSubjectTitleModal = ({
             </Button>
           )}
           <Button
-            variant="secondary"
-            onClick={handleCloseSubSubjectModal}
-            disabled={loading}
-          >
-            Close
-          </Button>
-          <Button
             variant="primary"
             onClick={handleFormSubmit}
             disabled={loading}
           >
             {loading ? "Saving..." : isUpdating ? "Update" : "Save"}
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={handleCloseSubSubjectModal}
+            disabled={loading}
+          >
+            Close
           </Button>
         </Modal.Footer>
       </Modal>

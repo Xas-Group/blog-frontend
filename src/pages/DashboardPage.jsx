@@ -164,10 +164,7 @@ function DashboardPage() {
 
   // Modal handlers for Subject
  const handleShowSubjectModal = (data = {}) => {
-   setIsUpdating(!!data.id);
-   console.log(data ? true : false);
-   
-  setIsUpdating( data ? true : false);
+   setIsUpdating(!!data.subjectId);
    setSubjectFormData(data);
    setShowSubjectModal(true);
  };
@@ -175,7 +172,7 @@ function DashboardPage() {
 
   const handleCloseSubjectModal = () => {
     setShowSubjectModal(false);
-    setSubjectFormData({});
+    setSubjectFormData(null);
     setIsUpdating(false);
   };
 

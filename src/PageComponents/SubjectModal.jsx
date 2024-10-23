@@ -3,6 +3,7 @@ import { Modal, Button, Form, Image, Spinner } from "react-bootstrap";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axiosInstance from "../utils/axiosInstance";
+  import Swal from "sweetalert2";
 
 const SubjectModal = ({
   showSubjectModal,
@@ -22,15 +23,18 @@ const SubjectModal = ({
   });
   const [loading, setLoading] = useState(false);
 
+
   // Update form data if initialFormData changes (e.g., in edit mode)
   useEffect(() => {
     if (initialFormData && isUpdating) {
       setSubjectFormData({
-        title: initialFormData.title || "",
-        description: initialFormData.description || "",
+        title: initialFormData.subjectName || "",
+        description: initialFormData.subjectDescription || "",
         image: null,
-        imagePreview: initialFormData.image ? initialFormData.image : null,
-        order: initialFormData.order || "",
+        imagePreview: initialFormData.subjectImage
+          ? initialFormData.subjectImage
+          : null,
+        order: initialFormData.subjectOrder || "",
       });
     } else {
       // Reset form data for adding a new subject
@@ -70,11 +74,12 @@ const SubjectModal = ({
     return (
       subjectFormData.title.trim() !== "" &&
       subjectFormData.description.trim() !== "" &&
-      subjectFormData.order.trim() !== ""
+      subjectFormData.order !== ""
     );
   };
 
   // Handle form submission (Insert or Update)
+
   const handleSubjectFormSubmit = async () => {
     if (!isFormValid()) {
       toast.error("Please fill out all fields.");
@@ -93,19 +98,38 @@ const SubjectModal = ({
     }
 
     try {
+      // Check if it's an update request
       if (isUpdating && selectedSubjectId) {
-        // Update API call
-        await axiosInstance.put(`/subject/${selectedSubjectId}`, formData);
-        toast.success("Subject updated successfully");
+        // Show SweetAlert2 confirmation
+        const result = await Swal.fire({
+          title: "Are you sure?",
+          text: "You are about to update the subject.",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Yes, update it!",
+          cancelButtonText: "Cancel",
+        });
+
+        // If confirmed, proceed with the update API call
+        if (result.isConfirmed) {
+          await axiosInstance.put(`/subject/${selectedSubjectId}`, formData);
+          toast.success("Subject updated successfully");
+
+          // Refresh the subjects list and close the modal
+          refreshSubjectsList();
+          handleCloseSubjectModal();
+        }
       } else {
         // Insert API call
         await axiosInstance.post("/subject", formData);
         toast.success("Subject added successfully");
-      }
 
-      // Refresh the subjects list and close the modal
-      refreshSubjectsList();
-      handleCloseSubjectModal();
+        // Refresh the subjects list and close the modal
+        refreshSubjectsList();
+        handleCloseSubjectModal();
+      }
     } catch (err) {
       console.error("Error in subject operation:", err);
       toast.error(
@@ -117,32 +141,50 @@ const SubjectModal = ({
     }
   };
 
+
   // Handle deleting the subject
+
   const handleDeleteSubject = async () => {
     if (!selectedSubjectId) {
       toast.error("No subject selected for deletion.");
       return;
     }
 
-    setLoading(true);
+    // Show SweetAlert2 confirmation
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "Cancel",
+    });
 
-    try {
-      await axiosInstance.delete(`/subject/${selectedSubjectId}`);
-      toast.success("Subject deleted successfully");
+    // If the user confirms, proceed with deletion
+    if (result.isConfirmed) {
+      setLoading(true);
 
-      // Refresh the subjects list and close the modal
-      refreshSubjectsList();
-      handleCloseSubjectModal();
-    } catch (err) {
-      console.error("Error deleting subject:", err);
-      toast.error(
-        err.response?.data?.message ||
-          "Failed to delete subject. Please try again."
-      );
-    } finally {
-      setLoading(false);
+      try {
+        await axiosInstance.delete(`/subject/${selectedSubjectId}`);
+        toast.success("Subject deleted successfully");
+
+        // Refresh the subjects list and close the modal
+        refreshSubjectsList();
+        handleCloseSubjectModal();
+      } catch (err) {
+        console.error("Error deleting subject:", err);
+        toast.error(
+          err.response?.data?.message ||
+            "Failed to delete subject. Please try again."
+        );
+      } finally {
+        setLoading(false);
+      }
     }
   };
+
 
   return (
     <>
@@ -224,13 +266,6 @@ const SubjectModal = ({
             </Button>
           )}
           <Button
-            variant="secondary"
-            onClick={handleCloseSubjectModal}
-            disabled={loading}
-          >
-            Close
-          </Button>
-          <Button
             variant="primary"
             onClick={handleSubjectFormSubmit}
             disabled={loading}
@@ -242,6 +277,13 @@ const SubjectModal = ({
             ) : (
               "Save"
             )}
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={handleCloseSubjectModal}
+            disabled={loading}
+          >
+            Close
           </Button>
         </Modal.Footer>
       </Modal>
