@@ -117,7 +117,7 @@ function LearnPage() {
   useEffect(() => {
     const fetchSubjects = async () => {
       try {
-        const response = await axiosInstance.get("/subjects"); // Adjust this URL as per your routing
+        const response = await axiosInstance.get("/blogSubjects"); // Adjust this URL as per your routing
         setSubjects(response.data); // Set the fetched subjects
       } catch (error) {
         console.error("Error fetching subjects:", error);

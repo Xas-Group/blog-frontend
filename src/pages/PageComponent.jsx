@@ -32,6 +32,42 @@ const componentTypeOptions = [
   { value: "ul", label: "Unorder List" },
 ];
 
+// Language Options
+const languageOptions = [
+  { value: "apache", label: "Apache" },
+  { value: "bash", label: "Bash" },
+  { value: "c", label: "C" },
+  { value: "cpp", label: "C++" },
+  { value: "csharp", label: "C#" },
+  { value: "css", label: "CSS" },
+  { value: "diff", label: "Diff" },
+  { value: "dockerfile", label: "Dockerfile" },
+  { value: "go", label: "Go" },
+  { value: "ini", label: "INI" },
+  { value: "java", label: "Java" },
+  { value: "javascript", label: "JavaScript" },
+  { value: "json", label: "JSON" },
+  { value: "kotlin", label: "Kotlin" },
+  { value: "less", label: "Less" },
+  { value: "lua", label: "Lua" },
+  { value: "makefile", label: "Makefile" },
+  { value: "markdown", label: "Markdown" },
+  { value: "nginx", label: "Nginx" },
+  { value: "objectivec", label: "Objective-C" },
+  { value: "php", label: "PHP" },
+  { value: "python", label: "Python" },
+  { value: "ruby", label: "Ruby" },
+  { value: "rust", label: "Rust" },
+  { value: "scss", label: "SCSS" },
+  { value: "shell", label: "Shell" },
+  { value: "sql", label: "SQL" },
+  { value: "swift", label: "Swift" },
+  { value: "typescript", label: "TypeScript" },
+  { value: "xml", label: "XML" },
+  { value: "yaml", label: "YAML" },
+];
+
+
 function PageComponent() {
   const { subTitleId } = useParams();
   const [subTitle, setSubTitle] = useState(null);
@@ -46,6 +82,7 @@ function PageComponent() {
     row_status: "separate",
     special_class: "",
     page_component_image: null,
+    language: null,
   });
   const [imagePreview, setImagePreview] = useState(null);
   const [error, setError] = useState("");
@@ -76,6 +113,14 @@ function PageComponent() {
       window.removeEventListener("paste", handlePaste);
     };
   }, []);
+
+  const handleLanguageChange = (selectedOption) => {
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      language: selectedOption,
+    }));
+  };
+
 
   const fetchSubjects = async () => {
     setLoading(true);
@@ -141,17 +186,23 @@ function PageComponent() {
       setSelectedComponent(component);
       setModalType("edit");
       setFormData({
-        page_description: component.page_description,
+        page_description: component.page_description || "",
         page_component_type: component.page_component_type
           ? componentTypeOptions.find(
               (option) => option.value === component.page_component_type
             )
           : null,
-        page_component_order: component.page_component_order,
-        row_status: component.row_status,
-        special_class: component.special_class,
+        page_component_order: component.page_component_order || 0,
+        row_status: component.row_status || "separate",
+        special_class: component.special_class || "",
+        language: component.language
+          ? languageOptions.find(
+              (option) => option.value === component.language
+            )
+          : null, 
         page_component_image: null,
       });
+
       setImagePreview(
         component.page_component_image
           ? getUrl(component.page_component_image)
@@ -196,6 +247,9 @@ function PageComponent() {
       formDataToSend.append("special_class", formData.special_class);
       formDataToSend.append("sub_subject_id", subTitleId);
 
+      // Include the language field in the request
+      formDataToSend.append("language", formData.language?.value || "");
+
       if (formData.page_component_image) {
         formDataToSend.append(
           "page_component_image",
@@ -234,6 +288,7 @@ function PageComponent() {
       setError("Error saving page component. Please try again.");
     }
   };
+
 
   const handleDelete = async (component) => {
     const result = await Swal.fire({
@@ -315,6 +370,12 @@ function PageComponent() {
                   {component.special_class && (
                     <Card.Text>
                       <strong>Special Class:</strong> {component.special_class}
+                    </Card.Text>
+                  )}
+
+                  {component.language && (
+                    <Card.Text>
+                      <strong>Language:</strong> {component.language}
                     </Card.Text>
                   )}
 
@@ -416,6 +477,15 @@ function PageComponent() {
                 name="special_class"
                 value={formData.special_class}
                 onChange={handleInputChange}
+              />
+            </Form.Group>
+            <Form.Group controlId="language" className="mb-3">
+              <Form.Label>Language</Form.Label>
+              <Select
+                options={languageOptions}
+                value={formData.language}
+                onChange={handleLanguageChange}
+                isClearable
               />
             </Form.Group>
             <Form.Group controlId="page_component_image" className="mb-3">

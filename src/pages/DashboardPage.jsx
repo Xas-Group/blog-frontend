@@ -10,6 +10,7 @@ import {
   Image,
   Breadcrumb,
   Alert,
+  Badge,
 } from "react-bootstrap";
 import { H1, H4 } from "../Components/Typography";
 import { FaPlus, FaSearch, FaExternalLinkAlt } from "react-icons/fa";
@@ -50,8 +51,6 @@ function DashboardPage() {
     subjectImage: "",
   });
 
-
-
   const [mainTitleFormData, setMainTitleFormData] = useState({});
   const [subTitleFormData, setSubTitleFormData] = useState({});
 
@@ -65,6 +64,14 @@ function DashboardPage() {
 
   // Error handling state
   const [error, setError] = useState(null);
+
+  // Badge for publishStatus
+  const getPublishStatusBadge = (status) => {
+    if (status === "publish") {
+      return <Badge bg="success">Publish</Badge>;
+    }
+    return <Badge bg="secondary">On Hold</Badge>;
+  };
 
   // Fetch subjects
   const fetchSubjects = async () => {
@@ -160,8 +167,10 @@ function DashboardPage() {
 
   // Search handler
   const handleSearchChange = (e) => setSearchTerm(e.target.value);
-  const handleMainTitleSearchChange = (e) => setSearchMainTitleTerm(e.target.value);
-  const handleSubTitleSearchChange = (e) => setSearchSubTitleTerm(e.target.value);
+  const handleMainTitleSearchChange = (e) =>
+    setSearchMainTitleTerm(e.target.value);
+  const handleSubTitleSearchChange = (e) =>
+    setSearchSubTitleTerm(e.target.value);
 
   // Filtered lists based on search term
   const filteredSubjects = subjects.filter((subject) =>
@@ -175,16 +184,17 @@ function DashboardPage() {
   );
 
   const filteredSubTitles = subTitles.filter((subTitle) =>
-    subTitle.sub_subject_title.toLowerCase().includes(searchSubTitleTerm.toLowerCase())
+    subTitle.sub_subject_title
+      .toLowerCase()
+      .includes(searchSubTitleTerm.toLowerCase())
   );
 
   // Modal handlers for Subject
- const handleShowSubjectModal = (data = {}) => {
-   setIsUpdating(!!data.subjectId);
-   setSubjectFormData(data);
-   setShowSubjectModal(true);
- };
-
+  const handleShowSubjectModal = (data = {}) => {
+    setIsUpdating(!!data.subjectId);
+    setSubjectFormData(data);
+    setShowSubjectModal(true);
+  };
 
   const handleCloseSubjectModal = () => {
     setShowSubjectModal(false);
@@ -374,6 +384,7 @@ function DashboardPage() {
                 <div>
                   <strong>{subject.subjectName}</strong>
                   <p className="mb-0">{subject.subjectDescription}</p>
+                  {getPublishStatusBadge(subject.publishStatus)}
                 </div>
               </ListGroup.Item>
             ))}
@@ -418,6 +429,7 @@ function DashboardPage() {
                 <div>
                   <strong>{mainTitle.main_subject_title}</strong>
                   <p className="mb-0">{mainTitle.main_subject_short_title}</p>
+                  {getPublishStatusBadge(mainTitle.publishStatus)}
                 </div>
               </ListGroup.Item>
             ))}
@@ -461,6 +473,7 @@ function DashboardPage() {
                 <div>
                   <strong>{subTitle.sub_subject_title}</strong>
                   <p className="mb-0">{subTitle.sub_subject_short_title}</p>
+                  {getPublishStatusBadge(subTitle.publishStatus)}
                 </div>
                 <Button
                   variant="link"

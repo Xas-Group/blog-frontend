@@ -20,6 +20,7 @@ const SubjectModal = ({
     image: null,
     imagePreview: null,
     order: "",
+    publishStatus: "onhold", // Default to 'onhold'
   });
   const [loading, setLoading] = useState(false);
 
@@ -34,6 +35,7 @@ const SubjectModal = ({
           ? getUrl(initialFormData.subjectImage)
           : null,
         order: initialFormData.subjectOrder || "",
+        publishStatus: initialFormData.publishStatus || "onhold",
       });
     } else {
       setSubjectFormData({
@@ -42,6 +44,7 @@ const SubjectModal = ({
         image: null,
         imagePreview: null,
         order: "",
+        publishStatus: "onhold",
       });
     }
   }, [initialFormData, isUpdating]);
@@ -93,7 +96,8 @@ const SubjectModal = ({
     return (
       subjectFormData.title.trim() !== "" &&
       subjectFormData.description.trim() !== "" &&
-      subjectFormData.order !== ""
+      subjectFormData.order !== "" &&
+      subjectFormData.publishStatus !== ""
     );
   };
 
@@ -109,6 +113,7 @@ const SubjectModal = ({
     formData.append("subjectName", subjectFormData.title);
     formData.append("subjectDescription", subjectFormData.description);
     formData.append("subjectOrder", subjectFormData.order);
+    formData.append("publishStatus", subjectFormData.publishStatus);
     if (subjectFormData.image) {
       formData.append("image", subjectFormData.image);
     }
@@ -255,6 +260,20 @@ const SubjectModal = ({
                 required
                 disabled={loading}
               />
+            </Form.Group>
+
+            <Form.Group className="mb-3" controlId="formPublishStatus">
+              <Form.Label>Publish Status</Form.Label>
+              <Form.Select
+                name="publishStatus"
+                value={subjectFormData.publishStatus}
+                onChange={handleSubjectFormChange}
+                disabled={loading}
+                required
+              >
+                <option value="publish">Publish</option>
+                <option value="onhold">On Hold</option>
+              </Form.Select>
             </Form.Group>
           </Form>
         </Modal.Body>

@@ -19,6 +19,7 @@ const MainTitleModal = ({
     main_subject_short_title: initialFormData.main_subject_short_title || "",
     main_subject_title_order: initialFormData.main_subject_title_order || "",
     subjectId: selectedSubjectId || initialFormData.subjectId || "",
+    publishStatus: initialFormData.publishStatus || "onhold", // Default to 'onhold'
   });
 
   const [loading, setLoading] = useState(false);
@@ -33,11 +34,13 @@ const MainTitleModal = ({
         main_subject_title_order:
           initialFormData.main_subject_title_order || "",
         subjectId: selectedSubjectId || initialFormData.subjectId || "",
+        publishStatus: initialFormData.publishStatus || "onhold",
       });
     } else {
       setMainTitleFormData((prevData) => ({
         ...prevData,
         subjectId: selectedSubjectId || "",
+        publishStatus: "onhold",
       }));
     }
   }, [initialFormData, selectedSubjectId, isUpdating]);
@@ -58,6 +61,7 @@ const MainTitleModal = ({
       main_subject_short_title,
       main_subject_title_order,
       subjectId,
+      publishStatus,
     } = mainTitleFormData;
 
     return (
@@ -65,12 +69,12 @@ const MainTitleModal = ({
       main_subject_short_title.trim() !== "" &&
       !isNaN(main_subject_title_order) &&
       main_subject_title_order > 0 &&
-      subjectId !== ""
+      subjectId !== "" &&
+      publishStatus !== ""
     );
   };
 
   // Handle form submission for insert or update
-
   const handleMainTitleFormSubmit = async () => {
     if (!isFormValid()) {
       toast.error("Please fill out all fields correctly.");
@@ -128,9 +132,7 @@ const MainTitleModal = ({
     }
   };
 
-
   // Handle deleting the main subject title
-
   const handleDeleteMainTitle = async () => {
     if (!selectedMainTitleId) {
       toast.error("No main subject title selected for deletion.");
@@ -171,7 +173,6 @@ const MainTitleModal = ({
       }
     }
   };
-
 
   return (
     <>
@@ -220,6 +221,20 @@ const MainTitleModal = ({
                 required
                 disabled={loading}
               />
+            </Form.Group>
+
+            <Form.Group className="mb-3" controlId="formPublishStatus">
+              <Form.Label>Publish Status</Form.Label>
+              <Form.Select
+                name="publishStatus"
+                value={mainTitleFormData.publishStatus}
+                onChange={handleMainTitleFormChange}
+                disabled={loading}
+                required
+              >
+                <option value="publish">Publish</option>
+                <option value="onhold">On Hold</option>
+              </Form.Select>
             </Form.Group>
           </Form>
         </Modal.Body>
