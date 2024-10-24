@@ -1,6 +1,6 @@
 const baseURLs = {
   local: "http://localhost:3000/api",
-  web: "http://api.blog.kaaryaalaya.com/api", // Ensure the URL is correct and uses HTTPS in production
+  web: "https://api.blog.kaaryaalaya.com/api", // Ensure the URL is correct and uses HTTPS in production
 };
 
 // Set the environment; you can switch between 'local' and 'web'
