@@ -4,12 +4,12 @@ import AuthService from "../services/authService";
 
 const baseURLs = {
   local: "http://localhost:3000/api",
-  web: "https://api.kaaryaalaya.com/api", // Ensure the URL is correct and uses HTTPS in production
+  web: "http://api.blog.kaaryaalaya.com/api", // Ensure the URL is correct and uses HTTPS in production
 };
 
 // Set the environment; you can switch between 'local' and 'web'
 // const environment = process.env.NODE_ENV === "production" ? "web" : "local";
-const environment = process.env.NODE_ENV === "production" ? "web" : "local";
+const environment = process.env.NODE_ENV === "production" ? "web" : "web";
 
 const axiosInstance = axios.create({
   baseURL: baseURLs[environment], // Dynamically set the base URL based on the environment
