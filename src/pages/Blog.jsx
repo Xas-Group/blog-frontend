@@ -13,7 +13,7 @@ import {
 import { useParams, useNavigate } from "react-router-dom"; 
 import axiosInstance from "../utils/axiosInstance";
 import { motion } from "framer-motion";
-import { FaChevronDown, FaChevronUp, FaBars, FaArrowUp } from "react-icons/fa";
+import { FaChevronDown, FaChevronUp, FaBars, FaArrowUp, FaArrowLeft } from "react-icons/fa";
 import styled from "styled-components";
 import { getUrl } from "../services/UrlServices";
 import RowComponent from "../BlogComponents/RowComponent";
@@ -38,6 +38,27 @@ const useIsMobile = () => {
 
   return isMobile;
 };
+
+
+// Styled component for the back button
+const BackButtonContainer = styled.div`
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  cursor: pointer;
+  margin-bottom: 10px;
+  transition: background-color 0.2s;
+  &:hover {
+    background-color: #e9ecef;
+  }
+`;
+
+const BackButtonText = styled.span`
+  margin-left: 8px;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #007bff;
+`;
 
 // Styled components
 const Sidebar = styled.div`
@@ -298,8 +319,13 @@ function Blog() {
 
         {/* Sidebar */}
         {!isMobile ? (
-          <Col lg={3} xl={2} >
+          <Col lg={3} xl={2}>
             <Sidebar>
+              <BackButtonContainer onClick={goBack}>
+                <FaArrowLeft size={20} color="#007bff" />
+                <BackButtonText>Back</BackButtonText>
+              </BackButtonContainer>
+
               <h5 className="text-center mb-3">Subject Overview</h5>
               <Image
                 src={getUrl(subject.subjectImage)}
