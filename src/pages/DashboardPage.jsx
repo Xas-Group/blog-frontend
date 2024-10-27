@@ -49,6 +49,7 @@ function DashboardPage() {
     subjectName: "",
     subjectDescription: "",
     subjectImage: "",
+    subjectOrder: 1,
   });
 
   const [mainTitleFormData, setMainTitleFormData] = useState({});
@@ -189,10 +190,34 @@ function DashboardPage() {
       .includes(searchSubTitleTerm.toLowerCase())
   );
 
+  const lastSubTitleOrder =
+    subTitles.length > 0
+      ? Math.max(
+          ...subTitles.map((subTitle) => subTitle.sub_subject_title_order)
+        )
+      : 0;
+
+      
+
   // Modal handlers for Subject
   const handleShowSubjectModal = (data = {}) => {
+
+    const lastSubjectOrder =
+      subjects.length > 0
+        ? Math.max(...subjects.map((subject) => subject.subjectOrder))
+        : 0;
+
+        
+
+     const newSubjectFormData = {
+       id: data.id || null,
+       subjectName: data.subjectName || "",
+       subjectDescription: data.subjectDescription || "",
+       subjectImage: data.subjectImage || "",
+       subjectOrder: data.subjectOrder || lastSubjectOrder + 1, // Use existing or increment order
+     };
     setIsUpdating(!!data.subjectId);
-    setSubjectFormData(data);
+  setSubjectFormData(newSubjectFormData);
     setShowSubjectModal(true);
   };
 
@@ -201,6 +226,13 @@ function DashboardPage() {
     setSubjectFormData(null);
     setIsUpdating(false);
   };
+
+  const lastMainTitleOrder =
+    mainTitles.length > 0
+      ? Math.max(
+          ...mainTitles.map((mainTitle) => mainTitle.main_subject_title_order)
+        )
+      : 0;
 
   const handleSubjectFormSubmit = () => {
     if (isUpdating) {
@@ -514,6 +546,7 @@ function DashboardPage() {
         selectedSubjectId={selectedSubject?.subjectId}
         selectedMainTitleId={selectedMainTitle?.main_subject_id}
         refreshMainTitlesList={() => fetchMainTitles(selectedSubject.subjectId)}
+        lastMainTitleOrder={lastMainTitleOrder}
       />
       <SubSubjectTitleModal
         isUpdating={isUpdating}
@@ -526,6 +559,7 @@ function DashboardPage() {
         refreshSubSubjectsList={() =>
           fetchSubTitles(selectedMainTitle.main_subject_id)
         }
+        lastSubTitleOrder={lastSubTitleOrder}
       />
     </Container>
   );

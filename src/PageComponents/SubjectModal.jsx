@@ -43,7 +43,7 @@ const SubjectModal = ({
         description: "",
         image: null,
         imagePreview: null,
-        order: "",
+        order: initialFormData?.subjectOrder || "",
         publishStatus: "onhold",
       });
     }

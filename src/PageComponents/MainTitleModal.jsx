@@ -13,6 +13,7 @@ const MainTitleModal = ({
   refreshMainTitlesList = () => {},
   selectedSubjectId = null,
   selectedMainTitleId = null,
+  lastMainTitleOrder = 0,
 }) => {
   const [mainTitleFormData, setMainTitleFormData] = useState({
     main_subject_title: initialFormData.main_subject_title || "",
@@ -27,6 +28,7 @@ const MainTitleModal = ({
   // Update form data if initialFormData changes (e.g., in edit mode)
   useEffect(() => {
     if (initialFormData && isUpdating) {
+      // Update mode: Set form data from initialFormData
       setMainTitleFormData({
         main_subject_title: initialFormData.main_subject_title || "",
         main_subject_short_title:
@@ -37,13 +39,17 @@ const MainTitleModal = ({
         publishStatus: initialFormData.publishStatus || "onhold",
       });
     } else {
-      setMainTitleFormData((prevData) => ({
-        ...prevData,
+      // Add mode: Clear data except for the order
+      setMainTitleFormData({
+        main_subject_title: "",
+        main_subject_short_title: "",
+        main_subject_title_order: lastMainTitleOrder + 1, // Keep the order
         subjectId: selectedSubjectId || "",
-        publishStatus: "onhold",
-      }));
+        publishStatus: "onhold", // Reset to default
+      });
     }
-  }, [initialFormData, selectedSubjectId, isUpdating]);
+  }, [initialFormData, selectedSubjectId, isUpdating, lastMainTitleOrder]);
+
 
   // Handle form input changes
   const handleMainTitleFormChange = (e) => {

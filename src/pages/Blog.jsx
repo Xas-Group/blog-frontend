@@ -319,7 +319,7 @@ function Blog() {
 
         {/* Sidebar */}
         {!isMobile ? (
-          <Col lg={3} xl={2}>
+          <Col lg={4} xl={2}>
             <Sidebar>
               <BackButtonContainer onClick={goBack}>
                 <FaArrowLeft size={20} color="#007bff" />
@@ -407,6 +407,12 @@ function Blog() {
             <Offcanvas.Header closeButton>
               <Offcanvas.Title>Menu</Offcanvas.Title>
             </Offcanvas.Header>
+
+            <BackButtonContainer onClick={goBack}>
+              <FaArrowLeft size={20} color="#007bff" />
+              <BackButtonText>Back</BackButtonText>
+            </BackButtonContainer>
+
             <Offcanvas.Body>
               <Sidebar>
                 <h5 className="text-center mb-3">Subject Overview</h5>
@@ -488,7 +494,7 @@ function Blog() {
         )}
 
         {/* Main Content Area */}
-        <Col lg={9} xl={10} className="mt-4 mb-5">
+        <Col lg={8} xl={10} className="mt-4 mb-5">
           {loadingContent ? (
             <div className="d-flex justify-content-center align-items-center mt-4">
               <Spinner animation="border" role="status" variant="primary">

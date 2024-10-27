@@ -88,6 +88,14 @@ function PageComponent() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+
+  const lastComponentOrder =
+    pageComponents.length > 0
+      ? Math.max(
+          ...pageComponents.map((component) => component.page_component_order)
+        )
+      : 0;
+
   // Event listener for paste event
   useEffect(() => {
     const handlePaste = (e) => {
@@ -182,6 +190,8 @@ function PageComponent() {
   };
 
   const openModal = (type, component = null) => {
+
+
     if (type === "edit") {
       setSelectedComponent(component);
       setModalType("edit");
@@ -210,15 +220,17 @@ function PageComponent() {
       );
       setShowModal(true);
     } else if (type === "add") {
+      
       // Clear all form fields
       setFormData({
         page_description: "",
         page_component_type: null,
-        page_component_order: 0,
+        page_component_order: lastComponentOrder + 1,
         row_status: "separate",
         special_class: "",
         page_component_image: null,
       });
+
       setImagePreview(null);
       setModalType("add");
       setShowModal(true);

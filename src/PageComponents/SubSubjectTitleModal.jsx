@@ -13,6 +13,7 @@ const SubSubjectTitleModal = ({
   selectedMainTitleId,
   refreshSubSubjectsList,
   selectedSubTitleId,
+  lastSubTitleOrder = 0,
 }) => {
   // Initialize form data with default values
   const [subSubjectFormData, setSubSubjectFormData] = useState({
@@ -31,7 +32,8 @@ const SubSubjectTitleModal = ({
     setSubSubjectFormData({
       sub_subject_title: initialFormData.sub_subject_title || "",
       sub_subject_short_title: initialFormData.sub_subject_short_title || "",
-      sub_subject_title_order: initialFormData.sub_subject_title_order || "",
+      sub_subject_title_order:
+        (initialFormData.sub_subject_title_order || (lastSubTitleOrder? lastSubTitleOrder + 1 : "" ) ) || "",
       main_subject_id:
         selectedMainTitleId || initialFormData.main_subject_id || "",
       publishStatus: initialFormData.publishStatus || "onhold",
