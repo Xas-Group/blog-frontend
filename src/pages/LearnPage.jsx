@@ -8,12 +8,12 @@ import {
   Form,
   InputGroup,
   Alert,
+  Spinner, // Import Spinner
 } from "react-bootstrap";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { H2, P } from "../Components/Typography";
 import { FaArrowRight, FaSearch, FaArrowLeft } from "react-icons/fa";
-import axios from "axios"; // Import axios for API requests
 import axiosInstance from "../utils/axiosInstance";
 import { getUrl } from "../services/UrlServices";
 
@@ -110,22 +110,25 @@ const NoResultsMessage = styled(Alert)`
 
 function LearnPage() {
   const [subjects, setSubjects] = useState([]); // State for subjects
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(""); // State for search term
+  const [loading, setLoading] = useState(true); // State for loading
   const navigate = useNavigate();
 
   // Fetch subjects from API
   useEffect(() => {
     const fetchSubjects = async () => {
       try {
-        const response = await axiosInstance.get("/blogSubjects"); // Adjust this URL as per your routing
-        setSubjects(response.data); // Set the fetched subjects
+        const response = await axiosInstance.get("/blogSubjects");
+        setSubjects(response.data);
       } catch (error) {
         console.error("Error fetching subjects:", error);
+      } finally {
+        setLoading(false); // Set loading to false after fetching
       }
     };
 
     fetchSubjects();
-  }, []); // Empty dependency array to run only once
+  }, []);
 
   // Filter subjects based on search term
   const filteredSubjects = subjects.filter((subject) =>
@@ -170,7 +173,11 @@ function LearnPage() {
           learning journey today!
         </P>
 
-        {filteredSubjects.length === 0 ? (
+        {loading ? (
+          <div className="d-flex justify-content-center mt-5">
+            <Spinner animation="border" variant="primary" />
+          </div>
+        ) : filteredSubjects.length === 0 ? (
           <NoResultsMessage variant="warning">
             No subjects found. Try searching with a different term.
           </NoResultsMessage>

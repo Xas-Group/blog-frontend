@@ -319,8 +319,8 @@ function Blog() {
 
         {/* Sidebar */}
         {!isMobile ? (
-          <Col lg={4} xl={2}>
-            <Sidebar>
+          <Col lg={4} xl={3}>
+            <Sidebar className="vh-100 sticky-top bg-light">
               <BackButtonContainer onClick={goBack}>
                 <FaArrowLeft size={20} color="#007bff" />
                 <BackButtonText>Back</BackButtonText>
@@ -494,7 +494,7 @@ function Blog() {
         )}
 
         {/* Main Content Area */}
-        <Col lg={8} xl={10} className="mt-4 mb-5">
+        <Col lg={8} xl={9} className="mt-4 mb-5">
           {loadingContent ? (
             <div className="d-flex justify-content-center align-items-center mt-4">
               <Spinner animation="border" role="status" variant="primary">
